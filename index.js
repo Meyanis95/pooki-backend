@@ -12,7 +12,7 @@ const { supabase } = require("./supabase");
 // const jwt = require('jsonwebtoken');
 // const path = require('path');
 // const history = require('history');
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 const cors = require("cors");
 var bodyParser = require("body-parser");
 
@@ -24,9 +24,13 @@ const provider = new ethers.providers.InfuraProvider(
   process.env.INFURA_ID
 );
 
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(
+  cors({
+    credentials: true,
+    origin: true,
+  })
+);
+app.options("*", cors());
 
 const main = async () => {
   const allUsers = await getAllUsers();
