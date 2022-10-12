@@ -12,7 +12,8 @@ const { supabase } = require("./supabase");
 // const jwt = require('jsonwebtoken');
 // const path = require('path');
 // const history = require('history');
-// const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const PORT = process.env.PORT || 8888;
 
@@ -21,7 +22,8 @@ const provider = new ethers.providers.InfuraProvider(
   network,
   process.env.INFURA_ID
 );
-app.use(express.json());
+
+app.use(express.json()).use(cors()).use(cookieParser());
 
 const main = async () => {
   const allUsers = await getAllUsers();
