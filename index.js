@@ -21,6 +21,7 @@ const provider = new ethers.providers.InfuraProvider(
   network,
   process.env.INFURA_ID
 );
+app.use(express.json());
 
 const main = async () => {
   const allUsers = await getAllUsers();
@@ -117,7 +118,7 @@ app.get("/login", async (req, res) => {
 
 app.get("/get_notifications", async (req, res) => {
   const address = req.query.data;
-  console.log("address received when get_notificatio", address);
+  console.log("address received when get_notifications", address);
 
   try {
     let { data, error } = await supabase
