@@ -42,16 +42,16 @@ const sendPushNotification = async (content) => {
    * service instead, which will later send the notifications to the users */
 };
 
-module.export = createNotif = async (tx, addr) => {
+createNotif = async (tx, addr) => {
   let type = 2;
   let content;
 
   if (tx.data === "0x") {
-    if (tx.from === addr) {
+    if (tx?.from?.toLowerCase() === addr.toLowerCase()) {
       content = `You sent ${ethers.utils.formatEther(
         tx.value
       )}ETH to ${shortenAddress(tx.to)}`;
-    } else if (tx.to === addr) {
+    } else if (tx?.to?.toLowerCase() === addr.toLowerCase()) {
       content = `You received ${ethers.utils.formatEther(
         tx.value
       )}ETH from ${shortenAddress(tx.to)}`;
@@ -79,3 +79,5 @@ module.export = createNotif = async (tx, addr) => {
     console.log(error);
   }
 };
+
+module.exports = { createNotif };

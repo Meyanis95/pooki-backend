@@ -3,6 +3,7 @@ const ethers = require("ethers");
 const axios = require("axios");
 const { getSubscriptionKey } = require("./helpers/getSubscriptionKey");
 const { getAllUsers } = require("./helpers/getAllUsers");
+const { createNotif } = require("./helpers/createNotif");
 const supabase = require("./supabase");
 //et cron = require("node-cron");
 //let shell = require("shelljs");
@@ -30,7 +31,7 @@ app.use(cors()).use(cookieParser());
 const main = async () => {
   const allUsers = await getAllUsers();
   const my_addresses = [];
-  allUsers.map((user) => my_addresses.push(user.address));
+  //allUsers.map((user) => my_addresses.push(user.address));
 
   function getState(addr) {
     return ethers.utils.resolveProperties({
@@ -45,7 +46,9 @@ const main = async () => {
 
   let allStates = [];
   my_addresses.map(async (addr) => {
-    allStates[addr] = await getState(addr);
+    let state = await getState(addr);
+    //console.log("state", state);
+    allStates[addr] = state;
   });
   //let lastState = await getState(addr);
   provider.on("block", async (blockNumber) => {
@@ -60,7 +63,10 @@ const main = async () => {
           //let allTxs = await etherscan_provider.getHistory(my_address);
           let allTxs = await provider.getBlockWithTransactions(blockNumber);
           allTxs.transactions.map((tx) => {
-            if (tx.from === addr || tx.to === addr) {
+            if (
+              tx?.from?.toLowerCase() === addr?.toLowerCase() ||
+              tx?.to?.toLowerCase() === addr?.toLowerCase()
+            ) {
               console.log("=============== ALERT =================");
               console.log("transaction on address:", addr);
               console.log(tx);
