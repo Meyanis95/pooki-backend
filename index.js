@@ -31,7 +31,7 @@ app.use(cors()).use(cookieParser());
 const main = async () => {
   const allUsers = await getAllUsers();
   const my_addresses = [];
-  //allUsers.map((user) => my_addresses.push(user.address));
+  allUsers.map((user) => my_addresses.push(user.address));
 
   function getState(addr) {
     return ethers.utils.resolveProperties({
