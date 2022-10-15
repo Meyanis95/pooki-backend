@@ -9,7 +9,8 @@ async function getPushToken(addr) {
     .eq("address", addr);
 
   if (data) {
-    const { push_token } = data;
+    console.log(data);
+    const { push_token } = data[0];
     return push_token;
   } else {
     console.log(error);
@@ -23,13 +24,13 @@ const shortenAddress = (address) => {
   )}`;
 };
 
-const sendPushNotification = async (content) => {
+const sendPushNotification = async (content, token) => {
   const message = [
     {
       body: content,
       data: { data: "goes here" },
       title: "New transaction!!",
-      to: "ExponentPushToken[MyTEDmNfbLpl-YmoeoEgnI]",
+      to: token,
     },
   ];
 
@@ -63,7 +64,7 @@ createNotif = async (tx, addr) => {
   }
 
   try {
-    //const { pushToken } = await getPushToken(addr);
+    const { pushToken } = await getPushToken(addr);
 
     let { data, error } = await supabase.from("notifications").insert({
       recipient_address: addr.toLowerCase(),
@@ -71,7 +72,7 @@ createNotif = async (tx, addr) => {
       type_id: type,
     });
 
-    sendPushNotification(content);
+    sendPushNotification(content, pushToken);
 
     if (error) return error.message;
     return;

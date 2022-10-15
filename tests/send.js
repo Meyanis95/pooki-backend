@@ -6,7 +6,7 @@ const sendPushNotification = async () => {
       body: "You just received a transaction",
       data: { data: "goes here" },
       title: "You just received a transaction",
-      to: "ExponentPushToken[MyTEDmNfbLpl-YmoeoEgnI]",
+      to: "ExponentPushToken[GG2nnTM6Z4n15h90ZHZakf]",
     },
   ];
 

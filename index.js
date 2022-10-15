@@ -12,8 +12,10 @@ const supabase = require("./supabase");
 // const jwt = require('jsonwebtoken');
 // const path = require('path');
 // const history = require('history');
+const { v4 } = require("uuid");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 var bodyParser = require("body-parser");
 
 const app = express();
@@ -21,14 +23,17 @@ const app = express();
 const PORT = process.env.PORT || 8888;
 
 const network = "goerli";
-const provider = new ethers.providers.InfuraProvider(
-  network,
-  process.env.INFURA_ID
-);
+
+const networks_list = ["homestead", "matic", "optimism", "arbitrum", "goerli"];
 
 app.use(cors()).use(cookieParser());
 
-const main = async () => {
+const main = async (network) => {
+  const provider = new ethers.providers.InfuraProvider(
+    network,
+    process.env.INFURA_ID
+  );
+
   const allUsers = await getAllUsers();
   const my_addresses = [];
   allUsers.map((user) => my_addresses.push(user.address));
@@ -88,29 +93,30 @@ app.get("/login", async (req, res) => {
   const address = req.query.data;
   let newaccount = undefined;
   console.log("address received", address);
+  const nonce = v4();
 
   try {
     let { data, error } = await supabase
       .from("users")
-      .select("*")
+      .select("nonce")
       .eq("address", address);
 
     if (data.length > 0) {
       let { data, error } = await supabase
         .from("users")
-        .select("*")
+        .update({ nonce })
         .match({ address: address });
       var id = data[0].id;
       newaccount = false;
       if (error) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(200).json({ id, newaccount });
+        res.status(200).json({ id, newaccount, nonce });
       }
     } else {
       let { data, error } = await supabase
         .from("users")
-        .insert({ address: address });
+        .insert({ address, nonce });
       console.log("data", data);
       console.log("error", error);
       newaccount = true;
@@ -118,7 +124,7 @@ app.get("/login", async (req, res) => {
       if (error) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(200).json({ id, newaccount });
+        res.status(200).json({ id, newaccount, nonce });
       }
     }
   } catch (error) {
@@ -168,8 +174,47 @@ app.get("/store_push_token", async (req, res) => {
   }
 });
 
+app.get("/verify", async (req, res) => {
+  try {
+    const { address, signature, nonce } = req.query;
+    console.log("address received", address);
+    console.log("signature received", signature);
+    console.log("nonce received", nonce);
+    const signerAddr = ethers.utils.verifyMessage(nonce, signature);
+    console.log("address resolved", signerAddr);
+
+    if (signerAddr.toLowerCase() !== address.toLowerCase()) {
+      throw new Error("wrong_signature");
+    }
+
+    let { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("address", address)
+      .eq("nonce", nonce)
+      .single();
+
+    const token = jwt.sign(
+      {
+        aud: "authenticated",
+        exp: Math.floor(Date.now() / 1000 + 60 * 60),
+        sub: user.id,
+        user_metadata: {
+          id: user.id,
+        },
+        role: "authenticated",
+      },
+      process.env.SUPABASE_JWT
+    );
+
+    res.status(200).json({ user, token });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening at http://localhost:${PORT}`);
 });
 
-main();
+main(network);
